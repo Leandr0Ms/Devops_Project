@@ -487,3 +487,4 @@ This project is created for educational purposes as part of a college DevOps cou
 **Deployment Status**: ✅ Live and Running
 **Application URL**: http://44.222.79.31
 **API URL**: http://44.222.79.31:5000/api
+
