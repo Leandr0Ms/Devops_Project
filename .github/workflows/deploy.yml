@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - staging
 
 env:
   EC2_HOST: 44.222.79.31
@@ -29,7 +30,8 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/erp-key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          ssh -i ~/.ssh/erp-key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "BRANCH_NAME=$BRANCH_NAME" 'bash -s' << 'EOF'
             # Navigate to app directory (create if doesn't exist)
             mkdir -p ~/erp-app
             cd ~/erp-app
@@ -37,9 +39,11 @@ jobs:
             # Clone or pull latest code
             if [ -d "Devops_Project" ]; then
               cd Devops_Project
-              git pull origin main
+              git fetch origin
+              git checkout $BRANCH_NAME
+              git pull origin $BRANCH_NAME
             else
-              git clone https://github.com/Leandr0Ms/Devops_Project.git
+              git clone -b $BRANCH_NAME https://github.com/Leandr0Ms/Devops_Project.git
               cd Devops_Project
             fi
 
@@ -70,7 +74,7 @@ jobs:
             # Show running containers
             docker ps
 
-            echo "Deployment completed successfully!"
+            echo "Deployment completed successfully! Branch: $BRANCH_NAME"
           EOF
 
       - name: Verify Deployment

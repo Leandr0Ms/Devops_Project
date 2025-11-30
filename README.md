@@ -82,6 +82,14 @@ Open this URL in your browser to access the product management interface.
 http://44.222.79.31:5000/api
 ```
 
+**Monitoring Services**
+```
+Zabbix:   http://44.222.79.31:8080  (Admin/zabbix)
+Grafana:  http://44.222.79.31:3000  (admin/admin)
+cAdvisor: http://44.222.79.31:8081  (no login)
+```
+See [MONITORING_GUIDE.md](MONITORING_GUIDE.md) for detailed monitoring setup.
+
 ### Quick Demo
 
 1. **Open the web interface**: Visit http://44.222.79.31 in your browser
@@ -170,6 +178,9 @@ Devops_Project/
 - **SSH (Port 22)**: Open to 0.0.0.0/0 for management
 - **HTTP (Port 80)**: Open to 0.0.0.0/0 for frontend
 - **Backend API (Port 5000)**: Open to 0.0.0.0/0 for API access
+- **Zabbix Web (Port 8080)**: Open to 0.0.0.0/0 for monitoring
+- **Grafana (Port 3000)**: Open to 0.0.0.0/0 for dashboards
+- **cAdvisor (Port 8081)**: Open to 0.0.0.0/0 for container metrics
 - **RDS (Port 5432)**: Only accessible from EC2 security group
 
 ### RDS Database
@@ -208,15 +219,35 @@ Devops_Project/
 
 4. **CI/CD Pipeline**
    - Configured GitHub Actions workflow
-   - Set up automated deployment on push to main branch
+   - Set up automated deployment on push to main and staging branches
    - Implemented SSH-based deployment to EC2
+
+5. **Monitoring Infrastructure**
+   - Deployed Zabbix server for environment monitoring
+   - Configured Grafana for visualization and dashboards
+   - Integrated cAdvisor for container metrics
+
+### Git Branching Strategy
+
+The project uses a three-branch workflow:
+
+- **`development`**: Active development branch for new features
+- **`staging`**: Testing and pre-production environment
+- **`main`**: Production-ready code
+
+**Workflow:**
+1. Develop features in `development` branch
+2. Merge to `staging` for testing
+3. Deploy `staging` to AWS for validation
+4. Merge to `main` for production deployment
+5. Both `staging` and `main` trigger automatic deployments via GitHub Actions
 
 ### Deployment Process
 
 #### Automated Deployment (CI/CD)
 The project uses GitHub Actions for continuous deployment:
 
-1. Push code to the `main` branch on GitHub
+1. Push code to the `main` or `staging` branch on GitHub
 2. GitHub Actions workflow automatically triggers
 3. Connects to EC2 instance via SSH
 4. Pulls latest code from repository
@@ -406,9 +437,11 @@ This project underwent significant optimization to work within the constraints o
 - ✅ **Backend and Frontend**: Flask backend + HTML/JS frontend
 - ✅ **Database storage and modification**: PostgreSQL on RDS with CRUD operations
 - ✅ **Docker containers**: All services containerized
-- ✅ **GIT for source control**: Hosted on GitHub
+- ✅ **GIT for source control**: Hosted on GitHub with 3 branches (development, staging, main)
 - ✅ **Production on AWS**: Deployed on EC2 with RDS database
-- ✅ **CI/CD**: GitHub Actions for automatic deployment
+- ✅ **CI/CD**: GitHub Actions for automatic deployment on staging and main branches
+- ✅ **Monitoring with Zabbix**: Zabbix server installed from Docker for environment monitoring
+- ✅ **Monitoring with Grafana**: Grafana for dashboards and container tracking
 
 ## Troubleshooting
 
