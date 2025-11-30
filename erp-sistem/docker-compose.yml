@@ -23,71 +23,6 @@ services:
     networks:
       - erp-network
 
-  # PostgreSQL database for Zabbix
-  zabbix-db:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_DB=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix_password
-    volumes:
-      - zabbix-db-data:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - erp-network
-
-  # Zabbix Server
-  zabbix-server:
-    image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
-    ports:
-      - "10051:10051"
-    environment:
-      - DB_SERVER_HOST=zabbix-db
-      - POSTGRES_DB=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix_password
-    depends_on:
-      - zabbix-db
-    restart: unless-stopped
-    networks:
-      - erp-network
-
-  # Zabbix Web Interface
-  zabbix-web:
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
-    ports:
-      - "8080:8080"
-    environment:
-      - ZBX_SERVER_HOST=zabbix-server
-      - DB_SERVER_HOST=zabbix-db
-      - POSTGRES_DB=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix_password
-      - PHP_TZ=America/New_York
-    depends_on:
-      - zabbix-server
-      - zabbix-db
-    restart: unless-stopped
-    networks:
-      - erp-network
-
-  # Zabbix Agent (monitors the host and containers)
-  zabbix-agent:
-    image: zabbix/zabbix-agent:alpine-7.0-latest
-    environment:
-      - ZBX_HOSTNAME=ERP-Server
-      - ZBX_SERVER_HOST=zabbix-server
-    privileged: true
-    pid: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /dev:/host/dev:ro
-    restart: unless-stopped
-    networks:
-      - erp-network
-
   # cAdvisor for container metrics
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -112,11 +47,9 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:
-      - zabbix-server
       - cadvisor
     restart: unless-stopped
     networks:
@@ -127,5 +60,4 @@ networks:
     driver: bridge
 
 volumes:
-  zabbix-db-data:
   grafana-data:
