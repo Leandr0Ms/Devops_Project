@@ -23,11 +23,8 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/erp-key.pem
+          echo "${{ secrets.EC2_SSH_KEY }}" | base64 -d > ~/.ssh/erp-key.pem
           chmod 600 ~/.ssh/erp-key.pem
-          # Verify key format
-          head -1 ~/.ssh/erp-key.pem
-          tail -1 ~/.ssh/erp-key.pem
           ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
