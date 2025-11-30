@@ -1,63 +1,20 @@
 services:
-  # PostgreSQL Database
-  db:
-    image: postgres:16-alpine
-    container_name: erp_postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-erpdb}
-      - POSTGRES_USER=${POSTGRES_USER:-erpuser}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-erppassword}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - erp_network
-
-  # Django Backend
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: erp_backend
-    restart: unless-stopped
+    build: ./backend
     ports:
-      - "8000:8000"
+      - "5000:5000"
     environment:
-      - SECRET_KEY=${SECRET_KEY:-change-me-in-prod}
-      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,frontend
-      - POSTGRES_DB=${POSTGRES_DB:-erpdb}
-      - POSTGRES_USER=${POSTGRES_USER:-erpuser}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-erppassword}
-      - DB_HOST=db
+      - DB_HOST=${DB_HOST}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - DB_PORT=5432
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - erp_network
-
-  # React Frontend
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: erp_frontend
     restart: unless-stopped
+
+  frontend:
+    build: ./frontend
     ports:
       - "80:80"
     depends_on:
       - backend
-    networks:
-      - erp_network
-
-volumes:
-  postgres_data:
-
-networks:
-  erp_network:
-    driver: bridge
+    restart: unless-stopped
