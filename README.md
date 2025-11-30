@@ -456,7 +456,7 @@ This project is designed to run within AWS free tier limits:
 **Cost Optimization Tips:**
 - Stop EC2 when not in use (but note: public IP will change)
 - Use RDS snapshots instead of keeping instance running 24/7
-- Monitor data transfer to stay within free tier limits
+- Monitor data transfer to stay within free tier limits.
 
 ## Future Enhancements
 
