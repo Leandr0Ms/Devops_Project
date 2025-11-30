@@ -1,0 +1,80 @@
+name: Deploy ERP System to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  EC2_HOST: 3.237.106.142
+  EC2_USER: ec2-user
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/erp-key.pem
+          chmod 600 ~/.ssh/erp-key.pem
+          ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/erp-key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
+            # Navigate to app directory (create if doesn't exist)
+            mkdir -p ~/erp-app
+            cd ~/erp-app
+
+            # Clone or pull latest code
+            if [ -d "Devops_Project" ]; then
+              cd Devops_Project
+              git pull origin main
+            else
+              git clone https://github.com/Leandr0Ms/Devops_Project.git
+              cd Devops_Project
+            fi
+
+            # Navigate to erp-sistem directory
+            cd erp-sistem
+
+            # Create production .env file
+            cat > .env << 'ENVFILE'
+          SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+          ALLOWED_HOSTS=${{ env.EC2_HOST }},localhost,127.0.0.1,backend,frontend
+          POSTGRES_DB=erpdb
+          POSTGRES_USER=erpuser
+          POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=5432
+          ENVFILE
+
+            # Stop existing containers
+            docker-compose -f docker-compose.prod.yml down || true
+
+            # Pull and rebuild images
+            docker-compose -f docker-compose.prod.yml build --no-cache
+
+            # Start containers
+            docker-compose -f docker-compose.prod.yml up -d
+
+            # Show running containers
+            docker ps
+
+            echo "Deployment completed successfully!"
+          EOF
+
+      - name: Verify Deployment
+        run: |
+          echo "Application deployed to: http://${{ env.EC2_HOST }}"
+          echo "Waiting 30 seconds for services to start..."
+          sleep 30
+          curl -f http://${{ env.EC2_HOST }} || echo "Frontend is starting up..."
