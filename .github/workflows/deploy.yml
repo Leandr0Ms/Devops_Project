@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  EC2_HOST: 3.237.106.142
+  EC2_HOST: 44.222.79.31
   EC2_USER: ec2-user
 
 jobs:
@@ -58,13 +58,14 @@ jobs:
           ENVFILE
 
             # Stop existing containers
-            docker-compose -f docker-compose.prod.yml down || true
+            docker-compose down || true
 
-            # Pull and rebuild images
-            docker-compose -f docker-compose.prod.yml build --no-cache
+            # Build images manually (buildx compatibility issue)
+            docker build -t erp-sistem-backend:latest ./backend
+            docker build -t erp-sistem-frontend:latest ./frontend
 
             # Start containers
-            docker-compose -f docker-compose.prod.yml up -d
+            docker-compose up -d
 
             # Show running containers
             docker ps
