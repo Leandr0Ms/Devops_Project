@@ -39,6 +39,24 @@ services:
     networks:
       - erp-network
 
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    depends_on:
+      - cadvisor
+    restart: unless-stopped
+    networks:
+      - erp-network
+
   # Grafana for visualization
   grafana:
     image: grafana/grafana:latest
@@ -50,7 +68,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:
-      - cadvisor
+      - prometheus
     restart: unless-stopped
     networks:
       - erp-network
@@ -61,3 +79,4 @@ networks:
 
 volumes:
   grafana-data:
+  prometheus-data:
