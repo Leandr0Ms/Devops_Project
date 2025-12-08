@@ -1,43 +1,94 @@
 # DevOps Project - ERP System
 
-A lightweight ERP (Enterprise Resource Planning) system demonstrating modern DevOps practices with AWS cloud deployment, Docker containerization, and CI/CD automation.
+A lightweight ERP (Enterprise Resource Planning) system demonstrating modern DevOps practices with AWS cloud deployment, Docker containerization, HTTPS/SSL, and CI/CD automation.
 
 ## Project Overview
 
 This project is a full-stack web application built as a college DevOps demonstration, showcasing:
 - Cloud infrastructure deployment on AWS
 - Containerization with Docker
+- Nginx reverse proxy with SSL/TLS
 - Continuous Integration/Continuous Deployment (CI/CD)
 - RESTful API design
 - Database management with PostgreSQL
+- Monitoring with Grafana and Prometheus
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        AWS Cloud                             │
-│                                                               │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │                    EC2 Instance                         │ │
-│  │                  (t3.micro - Amazon Linux 2023)         │ │
-│  │                                                          │ │
-│  │  ┌──────────────┐          ┌──────────────┐            │ │
-│  │  │   Frontend   │          │   Backend    │            │ │
-│  │  │   (Nginx)    │   ◄────► │   (Flask)    │            │ │
-│  │  │   Port 80    │          │   Port 5000  │            │ │
-│  │  └──────────────┘          └──────────────┘            │ │
-│  │         │                         │                     │ │
-│  │         └─────────────┬───────────┘                     │ │
-│  │                       │                                 │ │
-│  └───────────────────────┼─────────────────────────────────┘ │
-│                          │                                   │
-│                          ▼                                   │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │                  RDS PostgreSQL                         │ │
-│  │                  (db.t3.micro)                          │ │
-│  │                  Database: erpdb                        │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+                        Internet (HTTPS/HTTP)
+                                 │
+                                 ▼
+                    ┌────────────────────────────┐
+                    │   No-IP Dynamic DNS        │
+                    │  desafio-devops.ddns.net   │
+                    └────────────────────────────┘
+                                 │
+┌────────────────────────────────▼──────────────────────────────┐
+│                          AWS Cloud                             │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │              EC2 Instance (Amazon Linux 2023)             │ │
+│  │                                                            │ │
+│  │  ┌────────────────────────────────────────────────┐      │ │
+│  │  │         Nginx Reverse Proxy (Port 80/443)      │      │ │
+│  │  │              with Let's Encrypt SSL            │      │ │
+│  │  └───────────┬─────────────────┬──────────────────┘      │ │
+│  │              │                 │                          │ │
+│  │              ▼                 ▼                          │ │
+│  │    ┌──────────────┐   ┌──────────────┐                  │ │
+│  │    │  Frontend    │   │   Backend    │                  │ │
+│  │    │  (Docker)    │   │   (Docker)   │                  │ │
+│  │    │  Port 8080   │   │  Port 5000   │                  │ │
+│  │    └──────────────┘   └──────┬───────┘                  │ │
+│  │                              │                           │ │
+│  │    ┌──────────────┐   ┌──────────────┐                  │ │
+│  │    │   Grafana    │   │  Prometheus  │                  │ │
+│  │    │  Port 3000   │   │  Port 9090   │                  │ │
+│  │    └──────────────┘   └──────────────┘                  │ │
+│  │                                                            │ │
+│  └────────────────────────────┬───────────────────────────────┘ │
+│                               │                                 │
+│                               ▼                                 │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │              RDS PostgreSQL (db.t3.micro)                 │ │
+│  │                  Database: erpdb                          │ │
+│  └──────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 🌐 Accessing the Application
+
+### Live Application URLs
+
+**Main Application (HTTPS)**
+```
+https://desafio-devops.ddns.net
+```
+- Frontend web interface for product management
+- Secured with Let's Encrypt SSL certificate
+- Automatically redirects HTTP to HTTPS
+
+**Backend API (via Nginx Proxy)**
+```
+https://desafio-devops.ddns.net/api
+```
+- RESTful API endpoints
+- Proxied through Nginx to backend container
+
+**Monitoring Services (Direct Access)**
+```
+Grafana:     http://desafio-devops.ddns.net:3000  (admin/admin)
+Prometheus:  http://desafio-devops.ddns.net:9090  (no login)
+cAdvisor:    http://desafio-devops.ddns.net:8081  (no login)
+```
+
+**Alternative Access (Direct IP)**
+```
+Frontend:    http://44.222.79.31
+Grafana:     http://44.222.79.31:3000
+Prometheus:  http://44.222.79.31:9090
+cAdvisor:    http://44.222.79.31:8081
 ```
 
 ## Technology Stack
@@ -63,53 +114,222 @@ This project is a full-stack web application built as a college DevOps demonstra
 - **Cloud Provider**: Amazon Web Services (AWS)
 - **Compute**: EC2 t3.micro instance
 - **Database**: RDS PostgreSQL db.t3.micro
+- **Reverse Proxy**: Nginx with SSL/TLS (Let's Encrypt)
+- **DNS**: No-IP Dynamic DNS (desafio-devops.ddns.net)
 - **Containerization**: Docker & Docker Compose
 - **CI/CD**: GitHub Actions
 - **Version Control**: Git & GitHub
+- **Monitoring**: Grafana, Prometheus, cAdvisor
 
-## 🌐 Accessing the Application
+## 🚀 Important Commands
 
-### Live Application URLs
+### SSH Access to EC2
 
-**Frontend (Web Interface)**
-```
-http://44.222.79.31
-```
-Open this URL in your browser to access the product management interface.
-
-**Backend API**
-```
-http://44.222.79.31:5000/api
+```bash
+ssh -i your-key.pem ec2-user@44.222.79.31
 ```
 
-**Monitoring Services**
+### Docker Management
+
+**View running containers:**
+```bash
+docker ps
 ```
-Zabbix:   http://44.222.79.31:8080  (Admin/zabbix)
-Grafana:  http://44.222.79.31:3000  (admin/admin)
-cAdvisor: http://44.222.79.31:8081  (no login)
+
+**View all containers (including stopped):**
+```bash
+docker ps -a
 ```
-See [MONITORING_GUIDE.md](MONITORING_GUIDE.md) for detailed monitoring setup.
 
-### Quick Demo
+**Check container logs:**
+```bash
+# All services
+docker-compose logs
 
-1. **Open the web interface**: Visit http://44.222.79.31 in your browser
-2. **Add a product**: Fill in the form with:
-   - Product Name: e.g., "Laptop"
-   - Price: e.g., "999.99"
-   - Quantity: e.g., "5"
-3. **Click "Add Product"** - The product will be saved to the database
-4. **View products**: The table below automatically updates showing all products
+# Specific service
+docker-compose logs backend
+docker-compose logs frontend
 
-## Features
+# Follow logs in real-time
+docker-compose logs -f backend
+```
 
-### Product Management
-- **Create Products**: Add new products with name, price, and quantity
-- **View Products**: List all products in a responsive table
-- **Real-time Updates**: Automatic UI refresh after operations
-- **Health Monitoring**: System health check endpoint
-- **Database Persistence**: All data stored in AWS RDS PostgreSQL
+**Restart containers:**
+```bash
+# Restart all
+docker-compose restart
 
-### API Endpoints
+# Restart specific service
+docker-compose restart backend
+docker-compose restart frontend
+```
+
+**Stop all containers:**
+```bash
+docker-compose down
+```
+
+**Start containers:**
+```bash
+docker-compose up -d
+```
+
+**Rebuild and restart after code changes:**
+```bash
+cd ~/erp-app/Devops_Project/erp-sistem
+git pull
+docker-compose up -d --build
+```
+
+**View resource usage:**
+```bash
+docker stats
+```
+
+### Nginx Management
+
+**Test Nginx configuration:**
+```bash
+sudo nginx -t
+```
+
+**Reload Nginx (apply config changes):**
+```bash
+sudo systemctl reload nginx
+```
+
+**Restart Nginx:**
+```bash
+sudo systemctl restart nginx
+```
+
+**Check Nginx status:**
+```bash
+sudo systemctl status nginx
+```
+
+**View Nginx error logs:**
+```bash
+sudo tail -f /var/log/nginx/error.log
+```
+
+**View Nginx access logs:**
+```bash
+sudo tail -f /var/log/nginx/access.log
+```
+
+**Edit Nginx configuration:**
+```bash
+sudo nano /etc/nginx/conf.d/erp.conf
+```
+
+### SSL Certificate Management
+
+**Check certificate expiration:**
+```bash
+sudo certbot certificates
+```
+
+**Renew SSL certificate manually:**
+```bash
+sudo certbot renew
+sudo systemctl reload nginx
+```
+
+**Test auto-renewal:**
+```bash
+sudo certbot renew --dry-run
+```
+
+**Force certificate renewal:**
+```bash
+sudo certbot renew --force-renewal
+```
+
+### System Monitoring
+
+**Check system resources:**
+```bash
+# CPU and memory usage
+top
+
+# Disk usage
+df -h
+
+# Memory usage
+free -h
+```
+
+**Check Docker disk usage:**
+```bash
+docker system df
+```
+
+**Clean up Docker resources:**
+```bash
+# Remove unused images
+docker image prune -a
+
+# Remove unused volumes
+docker volume prune
+
+# Clean everything
+docker system prune -a
+```
+
+### Application Health Checks
+
+**Backend health check:**
+```bash
+curl http://localhost:5000/api/health
+```
+
+**Frontend check:**
+```bash
+curl -I http://localhost:8080
+```
+
+**Check through Nginx:**
+```bash
+curl http://localhost/api/health
+```
+
+**Check HTTPS:**
+```bash
+curl -I https://desafio-devops.ddns.net
+```
+
+### Database Operations
+
+**Initialize database:**
+```bash
+docker exec -it erp-sistem-backend-1 python3 -c "from app import init_db; init_db()"
+```
+
+**Test database connection:**
+```bash
+curl http://localhost:5000/api/health
+```
+
+### Git Operations
+
+**Pull latest changes:**
+```bash
+cd ~/erp-app/Devops_Project
+git pull origin main
+```
+
+**Check current branch:**
+```bash
+git branch
+```
+
+**View recent commits:**
+```bash
+git log --oneline -10
+```
+
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -120,48 +340,26 @@ See [MONITORING_GUIDE.md](MONITORING_GUIDE.md) for detailed monitoring setup.
 
 ## Testing the API
 
-You can test the API directly using curl commands:
-
 **Health Check:**
 ```bash
-curl http://44.222.79.31:5000/api/health
+curl https://desafio-devops.ddns.net/api/health
 ```
 Expected response: `{"database":"connected","status":"healthy"}`
 
 **Get All Products:**
 ```bash
-curl http://44.222.79.31:5000/api/products
+curl https://desafio-devops.ddns.net/api/products
 ```
 
 **Create a Product:**
 ```bash
-curl -X POST http://44.222.79.31:5000/api/products \
+curl -X POST https://desafio-devops.ddns.net/api/products \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Laptop",
     "price": 999.99,
     "quantity": 5
   }'
-```
-
-## Project Structure
-
-```
-Devops_Project/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # GitHub Actions CI/CD pipeline
-├── erp-sistem/
-│   ├── backend/
-│   │   ├── app.py              # Flask application
-│   │   ├── requirements.txt    # Python dependencies
-│   │   └── Dockerfile          # Backend container image
-│   ├── frontend/
-│   │   ├── index.html          # Single-page application
-│   │   └── Dockerfile          # Frontend container image
-│   ├── docker-compose.yml      # Container orchestration
-│   └── .env                    # Environment variables
-└── README.md                   # This file
 ```
 
 ## AWS Infrastructure Details
@@ -171,15 +369,18 @@ Devops_Project/
 - **OS**: Amazon Linux 2023
 - **Instance ID**: i-05fa6adb6efaa4b78
 - **Public IP**: 44.222.79.31
+- **Domain**: desafio-devops.ddns.net
 - **Region**: us-east-1 (N. Virginia)
 - **Storage**: 8 GB gp2 EBS volume
 
 ### Security Groups
 - **SSH (Port 22)**: Open to 0.0.0.0/0 for management
-- **HTTP (Port 80)**: Open to 0.0.0.0/0 for frontend
-- **Backend API (Port 5000)**: Open to 0.0.0.0/0 for API access
-- **Zabbix Web (Port 8080)**: Open to 0.0.0.0/0 for monitoring
+- **HTTP (Port 80)**: Open to 0.0.0.0/0 (redirects to HTTPS)
+- **HTTPS (Port 443)**: Open to 0.0.0.0/0 for secure access
 - **Grafana (Port 3000)**: Open to 0.0.0.0/0 for dashboards
+- **Backend API (Port 5000)**: Internal only (proxied via Nginx)
+- **Frontend (Port 8080)**: Internal only (proxied via Nginx)
+- **Prometheus (Port 9090)**: Open to 0.0.0.0/0 for metrics
 - **cAdvisor (Port 8081)**: Open to 0.0.0.0/0 for container metrics
 - **RDS (Port 5432)**: Only accessible from EC2 security group
 
@@ -192,62 +393,13 @@ Devops_Project/
 - **Allocated Storage**: 20 GB
 - **Backup Retention**: 7 days
 
-## Deployment Overview
+## Deployment Process
 
-### What Was Done
+### Automated Deployment (CI/CD)
 
-1. **AWS Infrastructure Setup**
-   - Created VPC with public subnets across 2 availability zones
-   - Configured internet gateway and route tables
-   - Set up security groups with appropriate firewall rules
-   - Launched EC2 t3.micro instance with Amazon Linux 2023
-   - Created RDS PostgreSQL database instance
-   - Configured RDS subnet group for multi-AZ support
-
-2. **Docker Configuration**
-   - Created optimized Dockerfile for Flask backend (Python 3.11-slim)
-   - Created lightweight Dockerfile for frontend (nginx:alpine)
-   - Configured docker-compose.yml for container orchestration
-   - Set up environment variables for database connection
-
-3. **Application Development**
-   - Built RESTful API with Flask
-   - Implemented CRUD operations for products
-   - Created responsive frontend with vanilla JavaScript
-   - Integrated frontend with backend API
-   - Set up database schema and migrations
-
-4. **CI/CD Pipeline**
-   - Configured GitHub Actions workflow
-   - Set up automated deployment on push to main and staging branches
-   - Implemented SSH-based deployment to EC2
-
-5. **Monitoring Infrastructure**
-   - Deployed Zabbix server for environment monitoring
-   - Configured Grafana for visualization and dashboards
-   - Integrated cAdvisor for container metrics
-
-### Git Branching Strategy
-
-The project uses a three-branch workflow:
-
-- **`development`**: Active development branch for new features
-- **`staging`**: Testing and pre-production environment
-- **`main`**: Production-ready code
-
-**Workflow:**
-1. Develop features in `development` branch
-2. Merge to `staging` for testing
-3. Deploy `staging` to AWS for validation
-4. Merge to `main` for production deployment
-5. Both `staging` and `main` trigger automatic deployments via GitHub Actions
-
-### Deployment Process
-
-#### Automated Deployment (CI/CD)
 The project uses GitHub Actions for continuous deployment:
 
-1. Push code to the `main` or `staging` branch on GitHub
+1. Push code to the `main` branch on GitHub
 2. GitHub Actions workflow automatically triggers
 3. Connects to EC2 instance via SSH
 4. Pulls latest code from repository
@@ -255,51 +407,173 @@ The project uses GitHub Actions for continuous deployment:
 6. Starts/restarts containers
 7. Application is live!
 
-#### Manual Deployment
+### Manual Deployment
 
-**Prerequisites:**
-- AWS account with EC2 and RDS access
-- SSH key pair for EC2 access
-- Docker and Docker Compose installed on EC2
+**On EC2 instance:**
 
-**Steps:**
+```bash
+# Navigate to project directory
+cd ~/erp-app/Devops_Project/erp-sistem
 
-1. **SSH into EC2:**
-   ```bash
-   ssh -i ~/.ssh/erp-key.pem ec2-user@44.222.79.31
-   ```
+# Pull latest code
+git pull
 
-2. **Clone Repository:**
-   ```bash
-   git clone https://github.com/Leandr0Ms/Devops_Project.git
-   cd Devops_Project/erp-sistem
-   ```
+# Rebuild and restart containers
+docker-compose down
+docker-compose up -d --build
 
-3. **Build Docker Images:**
-   ```bash
-   docker build -t erp-sistem-backend:latest ./backend
-   docker build -t erp-sistem-frontend:latest ./frontend
-   ```
+# Verify deployment
+docker ps
+docker-compose logs
+```
 
-4. **Start Services:**
-   ```bash
-   docker-compose up -d
-   ```
+## Monitoring
 
-5. **Initialize Database (First Time Only):**
-   ```bash
-   docker exec erp-sistem-backend-1 python3 -c "from app import init_db; init_db()"
-   ```
+### Grafana Dashboards
 
-6. **Verify Deployment:**
-   ```bash
-   docker ps
-   docker-compose logs
-   ```
+Access Grafana at `http://desafio-devops.ddns.net:3000`
+
+**Default credentials:** admin / admin
+
+**Available metrics:**
+- Container CPU usage
+- Container memory usage
+- Network traffic (received/transmitted)
+- Per-service metrics (backend, frontend)
+
+**Data source:** Prometheus at `http://prometheus:9090`
+
+### Prometheus Metrics
+
+Access Prometheus at `http://desafio-devops.ddns.net:9090`
+
+**Key metrics available:**
+- `container_cpu_usage_seconds_total` - CPU usage per container
+- `container_memory_usage_bytes` - Memory usage per container
+- `container_network_receive_bytes_total` - Network received
+- `container_network_transmit_bytes_total` - Network transmitted
+
+**Useful queries:**
+```promql
+# CPU usage by container
+sum by (name) (rate(container_cpu_usage_seconds_total{job="cadvisor"}[1m]))
+
+# Memory usage by container
+sum by (name) (container_memory_usage_bytes{job="cadvisor"})
+
+# Backend CPU
+rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service="backend"}[1m])
+```
+
+### cAdvisor
+
+Access cAdvisor at `http://desafio-devops.ddns.net:8081`
+
+Provides real-time container metrics and performance data.
+
+## Troubleshooting
+
+### Application not accessible
+
+**Check Nginx:**
+```bash
+sudo systemctl status nginx
+sudo nginx -t
+```
+
+**Check containers:**
+```bash
+docker ps
+docker-compose logs
+```
+
+### SSL certificate issues
+
+**Check certificate status:**
+```bash
+sudo certbot certificates
+```
+
+**Renew if needed:**
+```bash
+sudo certbot renew
+sudo systemctl reload nginx
+```
+
+### Backend not responding
+
+**Check backend logs:**
+```bash
+docker-compose logs backend
+```
+
+**Test backend directly:**
+```bash
+curl http://localhost:5000/api/health
+```
+
+**Restart backend:**
+```bash
+docker-compose restart backend
+```
+
+### Database connection failed
+
+**Test connection:**
+```bash
+curl http://localhost:5000/api/health
+```
+
+**Check environment variables:**
+```bash
+docker-compose config
+```
+
+### Port conflicts
+
+**Check what's using a port:**
+```bash
+sudo netstat -tulpn | grep :80
+sudo netstat -tulpn | grep :443
+```
+
+### Out of disk space
+
+**Check disk usage:**
+```bash
+df -h
+docker system df
+```
+
+**Clean up Docker:**
+```bash
+docker system prune -a
+docker volume prune
+```
+
+## Project Structure
+
+```
+Devops_Project/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml              # GitHub Actions CI/CD pipeline
+├── erp-sistem/
+│   ├── backend/
+│   │   ├── app.py                  # Flask application
+│   │   ├── requirements.txt        # Python dependencies
+│   │   └── Dockerfile              # Backend container image
+│   ├── frontend/
+│   │   ├── index.html              # Single-page application
+│   │   └── Dockerfile              # Frontend container image
+│   ├── docker-compose.yml          # Container orchestration
+│   ├── prometheus.yml              # Prometheus configuration
+│   └── .env                        # Environment variables
+├── nginx-erp.conf                  # Nginx reverse proxy config
+└── README.md                       # This file
+```
 
 ## Environment Variables
-
-The application uses the following environment variables (stored in `.env`):
 
 ```bash
 # Database Configuration
@@ -310,170 +584,15 @@ POSTGRES_PASSWORD=ErpPassword123!
 DB_PORT=5432
 ```
 
-## Database Schema
+## Security Features
 
-### Products Table
-```sql
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    quantity INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## Docker Configuration
-
-### Backend Dockerfile
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py .
-EXPOSE 5000
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "2", "app:app"]
-```
-
-### Frontend Dockerfile
-```dockerfile
-FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### Docker Compose Configuration
-```yaml
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
-    environment:
-      - DB_HOST=${DB_HOST}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_PORT=5432
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-```
-
-## Monitoring and Logs
-
-### View Container Status
-```bash
-ssh -i ~/.ssh/erp-key.pem ec2-user@44.222.79.31 'docker ps'
-```
-
-### View Backend Logs
-```bash
-ssh -i ~/.ssh/erp-key.pem ec2-user@44.222.79.31 'docker-compose -f ~/erp-app/Devops_Project/erp-sistem/docker-compose.yml logs backend --tail=50'
-```
-
-### View Frontend Logs
-```bash
-ssh -i ~/.ssh/erp-key.pem ec2-user@44.222.79.31 'docker-compose -f ~/erp-app/Devops_Project/erp-sistem/docker-compose.yml logs frontend --tail=50'
-```
-
-### Check System Health
-```bash
-# Check if services are running
-docker ps
-
-# Check backend health
-curl http://44.222.79.31:5000/api/health
-
-# Check frontend
-curl -I http://44.222.79.31
-```
-
-## Project Evolution
-
-This project underwent significant optimization to work within the constraints of AWS free-tier resources:
-
-### Initial Version (Replaced)
-- Django REST Framework backend
-- React + Vite frontend
-- Complex build process with 11,731+ modules
-- **Issue**: Build process overwhelmed t3.micro instance (1 GB RAM)
-
-### Current Version (Optimized)
-- Flask backend (minimal dependencies: 4 packages)
-- Static HTML frontend (no build required)
-- Lightweight Docker images
-- **Result**: Successfully runs on t3.micro without performance issues
-
-### Key Optimizations
-1. Replaced Django with Flask - 10x smaller memory footprint
-2. Removed Vite build process - no node_modules needed
-3. Used nginx:alpine for frontend - 5 MB base image
-4. Used python:3.11-slim for backend - minimal system dependencies
-
-## Key DevOps Practices Demonstrated
-
-1. **Infrastructure as Code**: AWS resources configured via AWS CLI
-2. **Containerization**: All services run in isolated Docker containers
-3. **Orchestration**: Docker Compose manages multi-container application
-4. **CI/CD**: Automated deployment via GitHub Actions
-5. **Cloud Services**: Leveraging AWS EC2 and RDS
-6. **Version Control**: Git for source code management
-7. **Security**: Environment variables for sensitive data, security groups for network isolation
-8. **Monitoring**: Health check endpoints and centralized logging
-9. **Resource Optimization**: Lightweight images and minimal dependencies
-
-## Project Requirements Checklist
-
-- ✅ **Application with GET and POST using JSON**: RESTful API with JSON payloads
-- ✅ **Backend and Frontend**: Flask backend + HTML/JS frontend
-- ✅ **Database storage and modification**: PostgreSQL on RDS with CRUD operations
-- ✅ **Docker containers**: All services containerized
-- ✅ **GIT for source control**: Hosted on GitHub with 3 branches (development, staging, main)
-- ✅ **Production on AWS**: Deployed on EC2 with RDS database
-- ✅ **CI/CD**: GitHub Actions for automatic deployment on staging and main branches
-- ✅ **Monitoring with Zabbix**: Zabbix server installed from Docker for environment monitoring
-- ✅ **Monitoring with Grafana**: Grafana for dashboards and container tracking
-
-## Troubleshooting
-
-### Issue: Cannot access application
-**Solution**: Check if EC2 instance is running and security groups allow traffic
-```bash
-aws ec2 describe-instances --profile personal --region us-east-1 --instance-ids i-05fa6adb6efaa4b78 --query 'Reservations[0].Instances[0].State.Name'
-```
-
-### Issue: Database connection fails
-**Solution**: Verify RDS instance is available and security groups allow EC2 to connect
-```bash
-curl http://44.222.79.31:5000/api/health
-```
-
-### Issue: IP address changed
-**Solution**: EC2 public IPs change when instance stops/starts. Get current IP:
-```bash
-aws ec2 describe-instances --profile personal --region us-east-1 --instance-ids i-05fa6adb6efaa4b78 --query 'Reservations[0].Instances[0].PublicIpAddress' --output text
-```
-
-### Issue: Products table doesn't exist
-**Solution**: Initialize the database:
-```bash
-ssh -i ~/.ssh/erp-key.pem ec2-user@44.222.79.31 'docker exec erp-sistem-backend-1 python3 -c "from app import init_db; init_db()"'
-```
-
-### Issue: Containers not running
-**Solution**: Check container status and restart if needed:
-```bash
-ssh -i ~/.ssh/erp-key.pem ec2-user@44.222.79.31 'cd ~/erp-app/Devops_Project/erp-sistem && docker-compose ps && docker-compose restart'
-```
+- ✅ HTTPS/SSL with Let's Encrypt (automatic renewal)
+- ✅ HTTP to HTTPS redirect
+- ✅ AWS Security Groups for network isolation
+- ✅ Environment variables for sensitive data
+- ✅ Database in private subnet (RDS)
+- ✅ Nginx reverse proxy (hides internal ports)
+- ✅ No-IP Dynamic DNS for stable domain access
 
 ## Cost Considerations
 
@@ -486,25 +605,18 @@ This project is designed to run within AWS free tier limits:
 
 **Estimated Monthly Cost (after free tier expires)**: ~$15-20/month
 
-**Cost Optimization Tips:**
-- Stop EC2 when not in use (but note: public IP will change)
-- Use RDS snapshots instead of keeping instance running 24/7
-- Monitor data transfer to stay within free tier limits.
-
 ## Future Enhancements
 
-- [ ] Allocate Elastic IP for consistent addressing
 - [ ] Implement user authentication and authorization
 - [ ] Add product update and delete endpoints
 - [ ] Set up CloudWatch monitoring and alerts
-- [ ] Implement automated RDS backups and restore procedures
 - [ ] Add product categories and search functionality
-- [ ] Create admin dashboard with analytics
-- [ ] Set up SSL/TLS certificates (HTTPS with Let's Encrypt)
-- [ ] Implement caching layer (Redis) for improved performance
+- [ ] Implement caching layer (Redis)
 - [ ] Add API rate limiting and request validation
-- [ ] Set up log aggregation (CloudWatch Logs)
+- [ ] Set up log aggregation
 - [ ] Implement blue-green deployment strategy
+- [ ] Add automated database backups
+- [ ] Create admin dashboard with analytics
 
 ## Repository
 
@@ -516,8 +628,8 @@ This project is created for educational purposes as part of a college DevOps cou
 
 ---
 
-**Last Updated**: November 30, 2025
-**Deployment Status**: ✅ Live and Running
-**Application URL**: http://44.222.79.31
-**API URL**: http://44.222.79.31:5000/api
-
+**Last Updated**: December 7, 2025
+**Deployment Status**: ✅ Live and Running with HTTPS
+**Application URL**: https://desafio-devops.ddns.net
+**API URL**: https://desafio-devops.ddns.net/api
+**Monitoring**: http://desafio-devops.ddns.net:3000 (Grafana)
