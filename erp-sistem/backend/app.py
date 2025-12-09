@@ -21,7 +21,12 @@ swagger_config = {
     ],
     "static_url_path": "/flasgger_static",
     "swagger_ui": True,
-    "specs_route": "/api/docs/"
+    "specs_route": "/api/docs/",
+    # Use CDN for Swagger UI assets to work better with reverse proxy
+    "swagger_ui_bundle_js": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
+    "swagger_ui_standalone_preset_js": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js",
+    "swagger_ui_css": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
+    "swagger_ui_favicon": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/favicon-32x32.png"
 }
 
 swagger_template = {
@@ -30,7 +35,9 @@ swagger_template = {
         "description": "API documentation for ERP System - Product Management",
         "version": "1.0.0"
     },
-    "schemes": ["http", "https"]
+    "schemes": ["http", "https"],
+    "host": "desafio-devops.ddns.net",
+    "basePath": "/"
 }
 
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
